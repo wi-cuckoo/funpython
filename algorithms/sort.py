@@ -47,6 +47,40 @@ class Sort(object):
             seq[pos] = el
         return seq
 
+    def merge(self, l):
+        seq = [x for x in l]
+
+        def _merge_sort(s):
+            if len(s) <= 1:
+                return
+            mid = len(s) // 2
+            left = s[:mid]
+            right = s[mid:]
+            _merge_sort(left)
+            _merge_sort(right)
+            i, j, k = 0, 0, 0
+            while i<len(left) and j < len(right):
+                if left[i] < right[j]:
+                    s[k] = left[i]
+                    i += 1
+                else:
+                    s[k] = right[j]
+                    j += 1
+                k += 1
+            while i < len(left):
+                s[k] = left[i]
+                i += 1
+                k += 1
+            while j < len(right):
+                s[k] = right[j]
+                j += 1
+                k += 1
+
+        _merge_sort(seq)
+        return seq
+
+    def fast(self, l):
+        pass
 
     def count(self, l, fn=lambda x: x):
         a, b = [], {}
@@ -64,8 +98,9 @@ class Sort(object):
         return a
 
 if __name__ == '__main__':
-    sample = [20, 40, 30, 9, 50, 80, 70, 60, 110, 14]
+    sample = [200, 140, 130, 109, 105, 80, 70, 60, 10, 4]
     print('Bubble Sort: ', Sort('bubble').do(sample))
-    print('select Sort: ', Sort('select').do(sample))
-    print('insert Sort: ', Sort('insert').do(sample))
+    print('Select Sort: ', Sort('select').do(sample))
+    print('Insert Sort: ', Sort('insert').do(sample))
+    print('Merge Sort: ', Sort('merge').do(sample))
     print('Count Sort: ', Sort('count').do(sample))
