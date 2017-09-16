@@ -19,6 +19,7 @@ class Stack:
     def size(self):
         return len(self.stack)
 
+
 def example(data):
     stack = Stack()
 
