@@ -164,6 +164,7 @@ class BookLab(object):
 		count = 1
 		while count < 5000:
 			print '\nTry %d times' % count
+			count += 1
 			for x in xrange(len(TIME_ARR)-3):
 				t = {'start': TIME_ARR[x], 'end': TIME_ARR[x+2]}
 				print 'book time range is %s - %s :' %(t['start'], t['end']),
