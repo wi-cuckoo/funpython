@@ -19,6 +19,7 @@ class Sort(object):
             for i in range(0, n-1):
                 if l[i] > l[i+1]:
                     l[i], l[i+1] = l[i+1], l[i]
+            print l
             n -= 1
         return l
 
@@ -100,7 +101,7 @@ class Sort(object):
 if __name__ == '__main__':
     sample = [200, 140, 130, 109, 105, 80, 70, 60, 10, 4]
     print('Bubble Sort: ', Sort('bubble').do(sample))
-    print('Select Sort: ', Sort('select').do(sample))
-    print('Insert Sort: ', Sort('insert').do(sample))
-    print('Merge Sort: ', Sort('merge').do(sample))
-    print('Count Sort: ', Sort('count').do(sample))
+    # print('Select Sort: ', Sort('select').do(sample))
+    # print('Insert Sort: ', Sort('insert').do(sample))
+    # print('Merge Sort: ', Sort('merge').do(sample))
+    # print('Count Sort: ', Sort('count').do(sample))

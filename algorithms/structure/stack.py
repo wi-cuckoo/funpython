@@ -16,6 +16,9 @@ class Stack:
     def pop(self):
         return self.stack.pop()
 
+    def peek(self):
+        return self.stack[self.size() - 1]
+
     def size(self):
         return len(self.stack)
 
@@ -48,5 +51,5 @@ def base_convert(num, base):
     return res
 
 if __name__ == '__main__':
-    res = base_convert(233, 16)
+    res = base_convert(255, 2)
     print(res)
