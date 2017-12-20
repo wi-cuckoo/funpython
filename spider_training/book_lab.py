@@ -10,12 +10,12 @@ from bs4 import BeautifulSoup
 
 # global const variable
 HOST = '115.156.150.131'
-TIME_ARR = ['08:00', '08:30', '09:00', '09:30',
-			'10:00', '10:30', '11:00', '11:30',
-			'14:00', '14:30', '15:00', '15:30',
-			'16:00', '16:30', '17:00', '17:30']
+TIME_ARR = [['08:00', '11:30'], 
+			['15:30', '17:00']]
+
 # set the tesseract cmd path
-pytesseract.pytesseract.tesseract_cmd = '<full_path_to_your_tesseract_executable>'
+tessdata_dir_config = '--tessdata-dir "/usr/local/share/tessdata"'
+pytesseract.pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
 
 
 class BookLab(object):
@@ -70,13 +70,12 @@ class BookLab(object):
 	def __parse_code(self, captcha):
 		verify_img_url = 'http://%s/captcha/image/%s' %(HOST, captcha)
 		# store temporary image
-		filepath = '/tmp/captcha.png'
+		filepath = '/tmp/captcha/%s.png' % captcha
 		r = self.session.get(verify_img_url)
 		with open(filepath, 'wb') as f:
 			f.write(r.content)
 
-		return 'xxxx'  # fake return
-		# return pytesseract.image_to_string(Image.open(filepath))
+		return pytesseract.image_to_string(Image.open(filepath), config=tessdata_dir_config)
 
 	def __parse_captcha(self, markup):
 		soup = BeautifulSoup(markup, 'lxml')
@@ -85,8 +84,8 @@ class BookLab(object):
 
 	def __parse_result(self, markup):
 		soup = BeautifulSoup(markup, 'lxml')
-		errlist = soup.find('ul', class_='errorlist')
-		msg = '\n'.join([el.string for el in errlist.children])
+		errlist = soup.find_all('ul', class_='errorlist')
+		msg = '\n'.join([el.string for err in errlist for el in err.children])
 		return msg
 
 
@@ -100,7 +99,7 @@ class BookLab(object):
 		csrftoken = r.cookies.get('csrftoken')
 		captcha = self.__parse_captcha(r.content)
 		code = self.__parse_code(captcha)
-		
+		print code
 		# cacl the lab date
 		today = date.today()
 		labdate = today + timedelta(days=7)
@@ -118,8 +117,8 @@ class BookLab(object):
 			'regdate': today.strftime('%Y/%m/%d'),
 			'labdate': labdate.strftime('%Y/%m/%d'),
 			'labinfo': '2个Si样品',
-			'starttime': _time['start'],
-			'endtime': _time['end'],
+			'starttime': _time[0],
+			'endtime': _time[1],
 			'material': 'Al',
 			'depth': '60',
 			'number': '1',
@@ -127,14 +126,14 @@ class BookLab(object):
 			'count_person': '1',
 			'count_taoke': '0',
 			'count_untaoke': '0',
-			'captcha_0': '8213f0ea7757c455da0aab8931e45cad00b7741c',
-			'captcha_1': 'EZEW',
+			'captcha_0': captcha,
+			'captcha_1': code,
 			'_save': '保存'
 		}
 		cookies = dict(csrftoken=csrftoken, sessionid=self.sessionid)
 		r = self.session.post(add_page_url, data=payload, cookies=cookies)
 		if not r.ok:
-			print 'submit the book form data: Failed'
+			print 'submit the book form data failed: ', r.reason
 			return
 
 		msg = self.__parse_result(r.content)
@@ -157,22 +156,36 @@ class BookLab(object):
 			return		
 		print 'Login successfully, sessionid is ', self.sessionid
 
-		tm = time.strftime('%H:%M')
-		if time.strptime(tm, '%H:%M') < time.strptime('07:59', '%H:%M'):
-			return
+		range_one = ('07:59:00', '08:01:00')
+		range_two = ('15:29:00', '15:31:00')
+		def in_range(t, r):
+			t = time.strptime(t, '%H:%M:%S')
+			r0 = time.strptime(r[0], '%H:%M:%S')
+			r1 = time.strptime(r[1], '%H:%M:%S')
+			return t > r0 and t < r1
 		# submit the book form
 		count = 1
-		while count < 5000:
+		while True:
+			tr = []
+			tm = time.strftime('%H:%M:%S')
+			if in_range(tm, range_one):
+				tr = TIME_ARR[0]
+			if in_range(tm, range_two):
+				tr = TIME_ARR[1]
+
+			if len(tr) == 0:
+				print 'Waiting.....%s\r' % tm,
+				time.sleep(1)
+				continue
+
 			print '\nTry %d times' % count
 			count += 1
-			for x in xrange(len(TIME_ARR)-3):
-				t = {'start': TIME_ARR[x], 'end': TIME_ARR[x+2]}
-				print 'book time range is %s - %s :' %(t['start'], t['end']),
-				res = self.book_submit(d, t)
-				if res == True:
-					print 'OK'
-					return
-				print 'Failed', res
+			print 'book time range is %s - %s :' %tuple(tr),
+			res = self.book_submit(d, tr)
+			if res == True:
+				print 'OK'
+				return
+			print 'Failed \n', res
 
 if __name__ == '__main__':
 	bl = BookLab('yaoqin', '123456')
