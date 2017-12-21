@@ -5,7 +5,7 @@ import requests
 import pytesseract
 import time
 from datetime import date, timedelta
-from PIL import Image
+from PIL import Image, ImageOps
 from bs4 import BeautifulSoup
 
 # global const variable
@@ -75,7 +75,24 @@ class BookLab(object):
 		with open(filepath, 'wb') as f:
 			f.write(r.content)
 
-		return pytesseract.image_to_string(Image.open(filepath), config=tessdata_dir_config)
+		def init_table(threshold=134):
+			table = []
+			for i in range(256):
+				if i < threshold:
+					table.append(0)
+				else:
+					table.append(1)
+			return table
+		im = Image.open(filepath) \
+			.convert('L') \
+			.point(init_table(), '1') \
+			.convert('L')
+		im = ImageOps.invert(im) \
+			.convert('1') \
+			.convert('L') \
+			.resize((120, 50))
+
+		return pytesseract.image_to_string(im, config=tessdata_dir_config)
 
 	def __parse_captcha(self, markup):
 		soup = BeautifulSoup(markup, 'lxml')
