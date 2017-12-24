@@ -115,7 +115,7 @@ class BookLab(object):
 
 		csrftoken = r.cookies.get('csrftoken')
 		captcha = self.__parse_captcha(r.content)
-		code = self.__parse_code(captcha)
+		code = self.__parse_code(captcha)[0:4]
 		print code
 		# cacl the lab date
 		today = date.today()
@@ -170,7 +170,7 @@ class BookLab(object):
 		"""
 		if self.login() is None:
 			print 'Login Failed, Exit'
-			return		
+			return
 		print 'Login successfully, sessionid is ', self.sessionid
 
 		range_one = ('07:59:00', '08:01:00')
